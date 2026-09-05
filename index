@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Student Registration</title>
+
+    <style>
+
+        body {
+            font-family: Arial;
+            margin: 40px;
+            background-color: #f2f2f2;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .form-box {
+            background: white;
+            padding: 20px;
+            width: 400px;
+            margin: auto;
+            border-radius: 10px;
+        }
+
+        input {
+            width: 95%;
+            padding: 10px;
+            margin: 8px 0;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 30px;
+            background: white;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #ddd;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<h1>Student Registration</h1>
+
+
+<!-- FORM -->
+
+<div class="form-box">
+
+    <input
+            type="text"
+            id="name"
+            placeholder="Enter Name">
+
+    <input
+            type="email"
+            id="email"
+            placeholder="Enter Email">
+
+    <input
+            type="number"
+            id="age"
+            placeholder="Enter Age">
+
+    <input
+            type="text"
+            id="course"
+            placeholder="Enter Course">
+
+    <button onclick="addStudent()">
+        Add Student
+    </button>
+
+</div>
+
+
+<!-- STUDENT TABLE -->
+
+<table>
+
+    <thead>
+
+    <tr>
+
+        <th>ID</th>
+
+        <th>Name</th>
+
+        <th>Email</th>
+
+        <th>Age</th>
+
+        <th>Course</th>
+
+        <th>Action</th>
+
+    </tr>
+
+    </thead>
+
+
+    <tbody id="studentTable">
+
+    </tbody>
+
+</table>
+
+
+<script>
+
+
+    // =================================
+    // ADD STUDENT
+    // =================================
+
+    function addStudent() {
+
+        let name =
+            document.getElementById("name").value;
+
+        let email =
+            document.getElementById("email").value;
+
+        let age =
+            document.getElementById("age").value;
+
+        let course =
+            document.getElementById("course").value;
+
+
+        if (name === "" ||
+            email === "" ||
+            age === "" ||
+            course === "") {
+
+            alert("Please fill all fields");
+
+            return;
+        }
+
+
+        fetch("/students", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                name: name,
+                email: email,
+                age: age,
+                course: course
+
+            })
+
+        })
+
+            .then(response => response.text())
+
+            .then(data => {
+
+                alert(data);
+
+                clearForm();
+
+                loadStudents();
+
+            });
+
+    }
+
+
+
+    // =================================
+    // DISPLAY STUDENTS
+    // =================================
+
+    function loadStudents() {
+
+        fetch("/students")
+
+            .then(response => response.json())
+
+            .then(students => {
+
+                let table =
+                    document.getElementById("studentTable");
+
+                table.innerHTML = "";
+
+
+                students.forEach(student => {
+
+                    table.innerHTML += `
+
+                    <tr>
+
+                        <td>${student.id}</td>
+
+                        <td>
+                            <input
+                                id="name-${student.id}"
+                                value="${student.name}">
+                        </td>
+
+                        <td>
+                            <input
+                                id="email-${student.id}"
+                                value="${student.email}">
+                        </td>
+
+                        <td>
+                            <input
+                                id="age-${student.id}"
+                                type="number"
+                                value="${student.age}">
+                        </td>
+
+                        <td>
+                            <input
+                                id="course-${student.id}"
+                                value="${student.course}">
+                        </td>
+
+                        <td>
+
+                            <button
+                                onclick="updateStudent(${student.id})">
+
+                                Update
+
+                            </button>
+
+
+                            <button
+                                onclick="deleteStudent(${student.id})">
+
+                                Delete
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+                });
+
+            });
+
+    }
+
+
+
+    // =================================
+    // UPDATE STUDENT
+    // =================================
+
+    function updateStudent(id) {
+
+        let name =
+            document.getElementById("name-" + id).value;
+
+        let email =
+            document.getElementById("email-" + id).value;
+
+        let age =
+            document.getElementById("age-" + id).value;
+
+        let course =
+            document.getElementById("course-" + id).value;
+
+
+        fetch("/students/" + id, {
+
+            method: "PUT",
+
+            headers: {
+
+                "Content-Type": "application/json"
+
+            },
+
+            body: JSON.stringify({
+
+                name: name,
+                email: email,
+                age: age,
+                course: course
+
+            })
+
+        })
+
+            .then(response => response.text())
+
+            .then(data => {
+
+                alert(data);
+
+                loadStudents();
+
+            });
+
+    }
+
+
+
+    // =================================
+    // DELETE STUDENT
+    // =================================
+
+    function deleteStudent(id) {
+
+        if (!confirm("Delete this student?")) {
+
+            return;
+        }
+
+
+        fetch("/students/" + id, {
+
+            method: "DELETE"
+
+        })
+
+            .then(response => response.text())
+
+            .then(data => {
+
+                alert(data);
+
+                loadStudents();
+
+            });
+
+    }
+
+
+
+    // =================================
+    // CLEAR FORM
+    // =================================
+
+    function clearForm() {
+
+        document.getElementById("name").value = "";
+
+        document.getElementById("email").value = "";
+
+        document.getElementById("age").value = "";
+
+        document.getElementById("course").value = "";
+
+    }
+
+
+
+    // =================================
+    // LOAD DATA WHEN PAGE OPENS
+    // =================================
+
+    loadStudents();
+
+
+</script>
+
+
+</body>
+
+</html>
