@@ -1,0 +1,199 @@
+package org.example.stu;
+
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/students")
+@CrossOrigin
+public class StudentRegistration {
+
+    // MySQL database details
+    static final String URL =
+            "jdbc:mysql://localhost:3306/studentdb";
+
+    static final String USER =
+            "kavya";
+
+    static final String PASSWORD =
+            "sathya";
+
+
+    // =========================
+    // ADD STUDENT
+    // =========================
+
+    @PostMapping
+    public String addStudent(@RequestBody Map<String, Object> student) {
+
+        String name = student.get("name").toString();
+        String email = student.get("email").toString();
+        int age = Integer.parseInt(student.get("age").toString());
+        String course = student.get("course").toString();
+
+        String sql =
+                "INSERT INTO students (name, email, age, course) " +
+                        "VALUES (?, ?, ?, ?)";
+
+        try (Connection con =
+                     DriverManager.getConnection(URL, USER, PASSWORD);
+
+             PreparedStatement ps =
+                     con.prepareStatement(sql)) {
+
+            ps.setString(1, name);
+            ps.setString(2, email);
+            ps.setInt(3, age);
+            ps.setString(4, course);
+
+            ps.executeUpdate();
+
+            return "Student added successfully";
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return "Error: " + e.getMessage();
+        }
+    }
+
+
+    // =========================
+    // DISPLAY STUDENTS
+    // =========================
+
+    @GetMapping
+    public List<Map<String, Object>> getStudents() {
+
+        List<Map<String, Object>> students =
+                new ArrayList<>();
+
+        String sql =
+                "SELECT * FROM students";
+
+        try (Connection con =
+                     DriverManager.getConnection(URL, USER, PASSWORD);
+
+             PreparedStatement ps =
+                     con.prepareStatement(sql);
+
+             ResultSet rs =
+                     ps.executeQuery()) {
+
+            while (rs.next()) {
+
+                Map<String, Object> student =
+                        new java.util.HashMap<>();
+
+                student.put("id", rs.getInt("id"));
+                student.put("name", rs.getString("name"));
+                student.put("email", rs.getString("email"));
+                student.put("age", rs.getInt("age"));
+                student.put("course", rs.getString("course"));
+
+                students.add(student);
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return students;
+    }
+
+
+    // =========================
+    // UPDATE STUDENT
+    // =========================
+
+    @PutMapping("/{id}")
+    public String updateStudent(
+            @PathVariable int id,
+            @RequestBody Map<String, Object> student) {
+
+        String name = student.get("name").toString();
+        String email = student.get("email").toString();
+        int age = Integer.parseInt(student.get("age").toString());
+        String course = student.get("course").toString();
+
+        String sql =
+                "UPDATE students " +
+                        "SET name=?, email=?, age=?, course=? " +
+                        "WHERE id=?";
+
+        try (Connection con =
+                     DriverManager.getConnection(URL, USER, PASSWORD);
+
+             PreparedStatement ps =
+                     con.prepareStatement(sql)) {
+
+            ps.setString(1, name);
+            ps.setString(2, email);
+            ps.setInt(3, age);
+            ps.setString(4, course);
+            ps.setInt(5, id);
+
+            int result = ps.executeUpdate();
+
+            if (result > 0) {
+
+                return "Student updated successfully";
+
+            } else {
+
+                return "Student not found";
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return "Error: " + e.getMessage();
+        }
+    }
+
+
+    // =========================
+    // DELETE STUDENT
+    // =========================
+
+    @DeleteMapping("/{id}")
+    public String deleteStudent(
+            @PathVariable int id) {
+
+        String sql =
+                "DELETE FROM students WHERE id=?";
+
+        try (Connection con =
+                     DriverManager.getConnection(URL, USER, PASSWORD);
+
+             PreparedStatement ps =
+                     con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            int result = ps.executeUpdate();
+
+            if (result > 0) {
+
+                return "Student deleted successfully";
+
+            } else {
+
+                return "Student not found";
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return "Error: " + e.getMessage();
+        }
+    }
+}
